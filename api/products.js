@@ -31,6 +31,7 @@ module.exports = async function handler(req, res) {
     const products = detailed.filter(Boolean).map((d) => ({
       id: d.sync_product.id,
       title: d.sync_product.name,
+      description: d.sync_product.description || '',
       thumbnail: d.sync_product.thumbnail_url,
       variants: d.sync_variants.map((v) => ({
         id: v.id,
