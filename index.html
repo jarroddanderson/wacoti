@@ -785,7 +785,8 @@
       <button class="filter-tab active" onclick="filterProducts('all', this)">All</button>
       <button class="filter-tab" onclick="filterProducts('hoodies', this)">Hoodies</button>
       <button class="filter-tab" onclick="filterProducts('tees', this)">Tees</button>
-      <button class="filter-tab" onclick="filterProducts('stickers', this)">Stickers</button>
+      <button class="filter-tab" onclick="filterProducts('sweaters', this)">Sweaters</button>
+          <button class="filter-tab" onclick="filterProducts('stickers', this)">Stickers</button>
     </div>
   </div>
   <div class="product-grid" id="productGrid">
@@ -988,7 +989,8 @@ async function fetchProducts() {
 function categorizeProduct(product) {
   const title = (product.title || '').toLowerCase();
   if (title.includes('hoodie') || title.includes('sweatshirt') || title.includes('pullover')) return 'hoodies';
-  if (title.includes('sticker') || title.includes('decal')) return 'stickers';
+  if (title.includes('sweater') || title.includes('crewneck')) return 'sweaters';
+    if (title.includes('sticker') || title.includes('decal')) return 'stickers';
   return 'tees';
 }
 
@@ -1021,7 +1023,7 @@ function renderProducts(products) {
     const cat = categorizeProduct(product);
     const price = getProductPrice(product);
     const img = getProductImage(product);
-    const tagLabel = { hoodies: 'Hoodie', tees: 'Tee', stickers: 'Sticker' }[cat] || 'Apparel';
+    const tagLabel = { hoodies: 'Hoodie', tees: 'Tee', sweaters: 'Sweater', stickers: 'Sticker' }[cat] || 'Apparel';
 
     return `
       <div class="product-card" data-cat="${cat}" data-id="${product.id}">
