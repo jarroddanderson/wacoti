@@ -797,12 +797,20 @@
 <section class="shop" id="shop">
   <div class="section-header">
     <h2 class="section-title">THE <span>DROP</span></h2>
-    <div class="filter-tabs" id="filterTabs">
+    <div class="shop-controls">
+          <div class="filter-tabs" id="filterTabs">
       <button class="filter-tab active" onclick="filterProducts('all', this)">All</button>
       <button class="filter-tab" onclick="filterProducts('hoodies', this)">Hoodies</button>
       <button class="filter-tab" onclick="filterProducts('tees', this)">Tees</button>
       <button class="filter-tab" onclick="filterProducts('sweaters', this)">Sweaters</button>
           <button class="filter-tab" onclick="filterProducts('stickers', this)">Stickers</button>
+    </div>
+      <select class="sort-select" onchange="sortProducts(this.value)">
+        <option value="featured">Featured</option>
+        <option value="price-asc">Price: Low to High</option>
+        <option value="price-desc">Price: High to Low</option>
+        <option value="name-asc">Name: A-Z</option>
+      </select>
     </div>
   </div>
   <div class="product-grid" id="productGrid">
