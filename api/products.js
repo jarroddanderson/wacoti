@@ -1,27 +1,25 @@
 const PRINTFUL_API_KEY = process.env.PRINTFUL_API_KEY;
 const STORE_ID = process.env.PRINTFUL_STORE_ID;
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET');
 
   try {
-    // Fetch product list
     const listRes = await fetch('https://api.printful.com/store/products?limit=50', {
       headers: {
-        'Authorization': `Bearer ${PRINTFUL_API_KEY}`,
+        'Authorization': 'Bearer ' + PRINTFUL_API_KEY,
         'X-PF-Store-Id': STORE_ID,
       },
     });
     const listData = await listRes.json();
     const summaries = listData.result || [];
 
-    // Fetch full details for each product
     const detailed = await Promise.all(
       summaries.map(async (p) => {
-        const r = await fetch(`https://api.printful.com/store/products/${p.id}`, {
+        const r = await fetch('https://api.printful.com/store/products/' + p.id, {
           headers: {
-            'Authorization': `Bearer ${PRINTFUL_API_KEY}`,
+            'Authorization': 'Bearer ' + PRINTFUL_API_KEY,
             'X-PF-Store-Id': STORE_ID,
           },
         });
@@ -41,8 +39,8 @@ export default async function handler(req, res) {
         color: v.color,
         price: parseFloat(v.retail_price) * 100,
         is_enabled: v.is_enabled,
-        preview: v.files?.find((f) => f.type === 'preview')?.preview_url || null,
-        product_image: v.product?.image || null,
+        preview: v.files && v.files.find((f) => f.type === 'preview') ? v.files.find((f) => f.type === 'preview').preview_url : null,
+        product_image: v.product ? v.product.image : null,
       })),
     }));
 
@@ -51,3 +49,4 @@ export default async function handler(req, res) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch products' });
   }
+};
