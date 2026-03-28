@@ -603,14 +603,14 @@
   .modal-close:hover { color: var(--acid); }
   .modal-body { padding: 28px 32px; }
   .modal-img {
-    width: 100%; aspect-ratio: 4/3;
+    width: 100%; aspect-ratio: 1/1;
     background: var(--mid);
     margin-bottom: 24px;
     display: flex; align-items: center; justify-content: center;
     font-size: 64px; color: var(--text-muted);
     overflow: hidden;
   }
-  .modal-img img { width: 100%; height: 100%; object-fit: cover; }
+  .modal-img img { width: 100%; height: 100%; object-fit: contain; }
   .modal-section-label {
     font-size: 10px; letter-spacing: 3px;
     text-transform: uppercase; color: var(--text-muted);
@@ -654,6 +654,14 @@
   .modal-add-btn:hover { background: var(--acid-dim); }
   .modal-add-btn:disabled { opacity: 0.5; }
 
+  .modal-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px; border-top: 1px solid var(--border); padding-top: 20px; }
+  .size-chart-toggle { background: none; border: 1px solid var(--border); color: var(--text-muted); padding: 8px 16px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-bottom: 12px; transition: all 0.2s; width: 100%; text-align: left; display: flex; justify-content: space-between; align-items: center; }
+  .size-chart-toggle:hover { border-color: var(--acid); color: var(--acid); }
+  .size-chart-wrap { display: none; margin-bottom: 24px; overflow-x: auto; }
+  .size-chart-wrap.open { display: block; }
+  .size-chart { width: 100%; border-collapse: collapse; font-family: 'DM Mono', monospace; font-size: 11px; }
+  .size-chart th, .size-chart td { border: 1px solid var(--border); padding: 8px 12px; text-align: center; color: var(--text-muted); }
+  .size-chart th { color: var(--acid); letter-spacing: 1px; text-transform: uppercase; }
   /* CHECKOUT MODAL */
   .checkout-modal { width: 580px; }
   .checkout-form { display: flex; flex-direction: column; gap: 16px; }
@@ -891,6 +899,9 @@
       <div class="color-grid" id="colorGrid"></div>
       <p class="modal-section-label" id="sizeLabel">Select Size</p>
       <div class="size-grid" id="sizeGrid"></div>
+      <div class="modal-desc" id="modalDesc"></div>
+      <button class="size-chart-toggle" onclick="toggleSizeChart(this)">Size Guide <span>▾</span></button>
+      <div class="size-chart-wrap" id="sizeChartWrap"></div>
       <button class="modal-add-btn" id="modalAddBtn" onclick="addToCartFromModal()" disabled>
         Select a size
       </button>
@@ -1143,6 +1154,30 @@ function getColorHex(name) {
   return COLOR_MAP[name.toLowerCase()] || '#888888';
 }
 
+const DESCRIPTIONS = {
+  hoodies: 'Unisex heavy blend pullover hoodie. 50% cotton, 50% polyester. Double-lined hood, front pouch pocket, and matching drawcord. Runs true to size — size up for a looser fit.',
+  tees: 'Unisex staple tee. 100% ring-spun cotton (heather colors 90% cotton, 10% polyester). Soft, lightweight, and pre-shrunk. Tear-away label for added comfort.',
+  sweaters: 'Unisex garment-dyed sweatshirt. 80% cotton, 20% polyester. Relaxed fit with ribbed cuffs and waistband. Side-seamed for a cleaner silhouette.',
+  stickers: 'High-quality vinyl sticker. Waterproof and UV-resistant — built to last indoors and out. Clean peel-and-stick backing.',
+};
+const SIZE_CHARTS = {
+  apparel: [
+    ['Size','Chest (in)','Body Length (in)'],
+    ['S','34–36','27'],['M','38–40','28'],['L','42–44','29'],
+    ['XL','46–48','30'],['2XL','50–52','31'],['3XL','54–56','32'],
+  ],
+  stickers: [
+    ['Size','Dimensions'],
+    ['3×3','3″ × 3″'],['4×4','4″ × 4″'],['5.5×5.5','5.5″ × 5.5″'],
+  ],
+};
+
+function toggleSizeChart(btn) {
+  const wrap = document.getElementById('sizeChartWrap');
+  const open = wrap.classList.toggle('open');
+  btn.querySelector('span').textContent = open ? '▴' : '▾';
+}
+
 function buildSizeGrid(variants) {
   const seen = new Set();
   const unique = variants.filter(v => {
@@ -1219,6 +1254,21 @@ function openSizeModal(productId) {
   const addBtn = document.getElementById('modalAddBtn');
   addBtn.disabled = true;
   addBtn.textContent = uniqueColors.length > 1 ? 'Select a color' : 'Select a size';
+
+  // Description
+  const cat = categorizeProduct(currentProduct);
+  const descEl = document.getElementById('modalDesc');
+  descEl.textContent = DESCRIPTIONS[cat] || DESCRIPTIONS.hoodies;
+
+  // Size chart
+  const chartData = (cat === 'stickers') ? SIZE_CHARTS.stickers : SIZE_CHARTS.apparel;
+  const chartWrap = document.getElementById('sizeChartWrap');
+  chartWrap.classList.remove('open');
+  const [headers, ...rows] = chartData;
+  chartWrap.innerHTML = '<table class="size-chart"><thead><tr>'
+    + headers.map(h => '<th>' + h + '</th>').join('') + '</tr></thead><tbody>'
+    + rows.map(r => '<tr>' + r.map(c => '<td>' + c + '</td>').join('') + '</tr>').join('')
+    + '</tbody></table>';
 
   document.getElementById('sizeModal').classList.add('open');
 }
