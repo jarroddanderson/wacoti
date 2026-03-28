@@ -256,6 +256,26 @@
     border-color: var(--acid);
   }
 
+  .shop-controls { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 0; }
+  .sort-select {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 8px 18px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+  .sort-select:hover, .sort-select:focus {
+    border-color: var(--acid);
+    color: var(--acid);
+    outline: none;
+  }
+  .sort-select option { background: #0a0a0a; color: var(--text); }
   /* PRODUCT GRID */
   .product-grid {
     display: grid;
@@ -781,12 +801,20 @@
 <section class="shop" id="shop">
   <div class="section-header">
     <h2 class="section-title">THE <span>DROP</span></h2>
-    <div class="filter-tabs" id="filterTabs">
-      <button class="filter-tab active" onclick="filterProducts('all', this)">All</button>
-      <button class="filter-tab" onclick="filterProducts('hoodies', this)">Hoodies</button>
-      <button class="filter-tab" onclick="filterProducts('tees', this)">Tees</button>
-      <button class="filter-tab" onclick="filterProducts('sweaters', this)">Sweaters</button>
-          <button class="filter-tab" onclick="filterProducts('stickers', this)">Stickers</button>
+    <div class="shop-controls">
+      <div class="filter-tabs" id="filterTabs">
+        <button class="filter-tab active" onclick="filterProducts('all', this)">All</button>
+        <button class="filter-tab" onclick="filterProducts('hoodies', this)">Hoodies</button>
+        <button class="filter-tab" onclick="filterProducts('tees', this)">Tees</button>
+        <button class="filter-tab" onclick="filterProducts('sweaters', this)">Sweaters</button>
+        <button class="filter-tab" onclick="filterProducts('stickers', this)">Stickers</button>
+      </div>
+      <select class="sort-select" onchange="sortProducts(this.value)">
+        <option value="featured">Featured</option>
+        <option value="price-asc">Price: Low to High</option>
+        <option value="price-desc">Price: High to Low</option>
+        <option value="name-asc">Name: A–Z</option>
+      </select>
     </div>
   </div>
   <div class="product-grid" id="productGrid">
@@ -948,6 +976,7 @@ let cart = JSON.parse(localStorage.getItem('wacoti_cart') || '[]');
 let currentProduct = null;
 let selectedVariant = null;
 let activeFilter = 'all';
+let activeSort = 'featured';
 
 // ============================================================
 // CURSOR
@@ -973,6 +1002,9 @@ async function fetchProducts() {
     const res = await fetch('/api/products');
     const data = await res.json();
     allProducts = (data.products || []).sort((a, b) => {
+      const aH = a.title.toLowerCase().includes('stop asking') && categorizeProduct(a) === 'hoodies';
+      const bH = b.title.toLowerCase().includes('stop asking') && categorizeProduct(b) === 'hoodies';
+      if (aH !== bH) return aH ? -1 : 1;
       const aS = categorizeProduct(a) === 'sweaters';
       const bS = categorizeProduct(b) === 'sweaters';
       return aS === bS ? 0 : aS ? -1 : 1;
@@ -1012,11 +1044,25 @@ function getProductImage(product) {
   return product.thumbnail || product.variants?.[0]?.preview || null;
 }
 
+function getMinPrice(product) {
+  const prices = (product.variants || []).filter(v => v.is_enabled !== false).map(v => v.price);
+  return prices.length ? Math.min(...prices) : 0;
+}
+
+function sortProducts(sort) {
+  activeSort = sort;
+  renderProducts(allProducts);
+}
+
 function renderProducts(products) {
   const grid = document.getElementById('productGrid');
+  let sorted = [...products];
+  if (activeSort === 'price-asc') sorted.sort((a, b) => getMinPrice(a) - getMinPrice(b));
+  else if (activeSort === 'price-desc') sorted.sort((a, b) => getMinPrice(b) - getMinPrice(a));
+  else if (activeSort === 'name-asc') sorted.sort((a, b) => a.title.localeCompare(b.title));
   const filtered = activeFilter === 'all'
-    ? products
-    : products.filter(p => categorizeProduct(p) === activeFilter);
+    ? sorted
+    : sorted.filter(p => categorizeProduct(p) === activeFilter);
 
   if (!filtered.length) {
     renderEmpty();
