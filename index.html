@@ -578,7 +578,7 @@
   .modal {
     background: var(--gray);
     border: 1px solid var(--border);
-    width: 480px; max-width: 95vw;
+    width: 720px; max-width: 96vw;
     max-height: 90vh;
     overflow-y: auto;
     transform: translateY(20px);
@@ -601,11 +601,11 @@
     cursor: none; transition: color 0.2s;
   }
   .modal-close:hover { color: var(--acid); }
-  .modal-body { padding: 40px 44px; }
+  .modal-body { padding: 28px 32px; }
   .modal-img {
     width: 100%; aspect-ratio: 1/1;
     background: var(--mid);
-    margin-bottom: 32px;
+    margin-bottom: 0;
     display: flex; align-items: center; justify-content: center;
     font-size: 64px; color: var(--text-muted);
     overflow: hidden;
@@ -662,6 +662,18 @@
   .size-chart { width: 100%; border-collapse: collapse; font-family: 'DM Mono', monospace; font-size: 11px; }
   .size-chart th, .size-chart td { border: 1px solid var(--border); padding: 8px 12px; text-align: center; color: var(--text-muted); }
   .size-chart th { color: var(--acid); letter-spacing: 1px; text-transform: uppercase; }
+  .modal-grid { display: flex; gap: 28px; margin-bottom: 24px; }
+  .modal-grid .modal-img { width: 220px; min-width: 220px; flex-shrink: 0; }
+  .modal-controls { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .modal-controls .color-grid { margin-bottom: 20px; }
+  .modal-controls .size-grid { margin-bottom: 20px; }
+  .modal-qty { margin-bottom: 16px; }
+  .modal-qty .modal-section-label { margin-bottom: 10px; }
+  .qty-stepper { display: flex; align-items: center; gap: 16px; }
+  .qty-step-btn { background: var(--mid); border: 1px solid var(--border); color: var(--white); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; line-height: 1; transition: all 0.2s; font-family: monospace; }
+  .qty-step-btn:hover { border-color: var(--acid); color: var(--acid); }
+  .qty-num-display { font-family: 'DM Mono', monospace; font-size: 14px; min-width: 24px; text-align: center; }
+  .modal-controls .modal-add-btn { margin-top: auto; width: 100%; }
   /* CHECKOUT MODAL */
   .checkout-modal { width: 580px; }
   .checkout-form { display: flex; flex-direction: column; gap: 16px; }
@@ -894,17 +906,27 @@
       <button class="modal-close" onclick="closeSizeModal()">✕</button>
     </div>
     <div class="modal-body">
-      <div class="modal-img" id="modalProductImg"></div>
-      <p class="modal-section-label" id="colorLabel" style="display:none">Select Color</p>
-      <div class="color-grid" id="colorGrid"></div>
-      <p class="modal-section-label" id="sizeLabel">Select Size</p>
-      <div class="size-grid" id="sizeGrid"></div>
+      <div class="modal-grid">
+        <div class="modal-img" id="modalProductImg"></div>
+        <div class="modal-controls">
+          <p class="modal-section-label" id="colorLabel" style="display:none">Select Color</p>
+          <div class="color-grid" id="colorGrid"></div>
+          <p class="modal-section-label" id="sizeLabel">Select Size</p>
+          <div class="size-grid" id="sizeGrid"></div>
+          <div class="modal-qty">
+            <p class="modal-section-label">Qty</p>
+            <div class="qty-stepper">
+              <button class="qty-step-btn" onclick="changeQty(-1)">−</button>
+              <span class="qty-num-display" id="modalQtyNum">1</span>
+              <button class="qty-step-btn" onclick="changeQty(1)">+</button>
+            </div>
+          </div>
+          <button class="modal-add-btn" id="modalAddBtn" onclick="addToCartFromModal()" disabled>Select a size</button>
+        </div>
+      </div>
       <div class="modal-desc" id="modalDesc"></div>
       <button class="size-chart-toggle" onclick="toggleSizeChart(this)">Size Guide <span>▾</span></button>
       <div class="size-chart-wrap" id="sizeChartWrap"></div>
-      <button class="modal-add-btn" id="modalAddBtn" onclick="addToCartFromModal()" disabled>
-        Select a size
-      </button>
     </div>
   </div>
 </div>
@@ -997,6 +1019,7 @@ let cart = JSON.parse(localStorage.getItem('wacoti_cart') || '[]');
 let currentProduct = null;
 let selectedVariant = null;
 let selectedColor = null;
+let modalQty = 1;
 let activeFilter = 'all';
 let activeSort = 'featured';
 
@@ -1142,6 +1165,11 @@ function filterProducts(cat, btn) {
 // ============================================================
 // SIZE MODAL
 // ============================================================
+function changeQty(delta) {
+  modalQty = Math.max(1, modalQty + delta);
+  document.getElementById('modalQtyNum').textContent = modalQty;
+}
+
 const COLOR_MAP = {
   'black': '#111111', 'white': '#f0f0f0', 'carbon grey': '#636363',
   'dusty rose': '#c9a0a0', 'team red': '#bf0a0a', 'team royal': '#1a4b8a',
@@ -1273,6 +1301,7 @@ function openSizeModal(productId) {
     + rows.map(r => '<tr>' + r.map(c => '<td>' + c + '</td>').join('') + '</tr>').join('')
     + '</tbody></table>';
 
+  modalQty = 1; document.getElementById('modalQtyNum').textContent = '1';
   document.getElementById('sizeModal').classList.add('open');
 }
 
@@ -1295,7 +1324,7 @@ function closeSizeModal(e) {
 
 function addToCartFromModal() {
   if (!currentProduct || !selectedVariant) return;
-  addToCart(currentProduct, selectedVariant);
+  addToCart(currentProduct, selectedVariant, modalQty);
   document.getElementById('sizeModal').classList.remove('open');
   showToast(`${currentProduct.title} added to bag`);
   toggleCart();
@@ -1304,10 +1333,10 @@ function addToCartFromModal() {
 // ============================================================
 // CART
 // ============================================================
-function addToCart(product, variant) {
+function addToCart(product, variant, qty = 1) {
   const existing = cart.find(i => i.variantId === variant.id && i.productId === product.id);
   if (existing) {
-    existing.qty += 1;
+    existing.qty += qty;
   } else {
     cart.push({
       productId: product.id,
@@ -1316,7 +1345,7 @@ function addToCart(product, variant) {
       variantTitle: variant.title.split(' / ')[0],
       price: variant.price,
       image: getProductImage(product),
-      qty: 1
+      qty: qty
     });
   }
   saveCart();
