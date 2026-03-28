@@ -1,7 +1,7 @@
 const PRINTFUL_API_KEY = process.env.PRINTFUL_API_KEY;
 const STORE_ID = process.env.PRINTFUL_STORE_ID;
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     const pfRes = await fetch('https://api.printful.com/orders', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${PRINTFUL_API_KEY}`,
+        'Authorization': 'Bearer ' + PRINTFUL_API_KEY,
         'X-PF-Store-Id': STORE_ID,
         'Content-Type': 'application/json',
       },
@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     const data = await pfRes.json();
 
     if (!pfRes.ok) {
-      return res.status(pfRes.status).json({ error: data.error?.message || 'Order failed' });
+      return res.status(pfRes.status).json({ error: data.error ? data.error.message : 'Order failed' });
     }
 
     res.status(200).json({ orderId: data.result.id });
@@ -33,4 +33,4 @@ export default async function handler(req, res) {
     console.error(err);
     res.status(500).json({ error: 'Failed to place order' });
   }
-}
+};
