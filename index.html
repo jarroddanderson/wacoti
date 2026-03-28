@@ -601,11 +601,11 @@
     cursor: none; transition: color 0.2s;
   }
   .modal-close:hover { color: var(--acid); }
-  .modal-body { padding: 28px 32px; }
+  .modal-body { padding: 40px 44px; }
   .modal-img {
     width: 100%; aspect-ratio: 1/1;
     background: var(--mid);
-    margin-bottom: 24px;
+    margin-bottom: 32px;
     display: flex; align-items: center; justify-content: center;
     font-size: 64px; color: var(--text-muted);
     overflow: hidden;
@@ -614,9 +614,9 @@
   .modal-section-label {
     font-size: 10px; letter-spacing: 3px;
     text-transform: uppercase; color: var(--text-muted);
-    margin-bottom: 12px;
+    margin-bottom: 16px;
   }
-  .size-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .size-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 32px; }
   .size-btn {
     background: var(--mid); border: 1px solid var(--border);
     color: var(--white); padding: 10px 16px;
@@ -630,7 +630,7 @@
     border-color: var(--acid); 
   }
   .size-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-  .color-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .color-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 32px; }
   .color-btn {
     display: flex; align-items: center; gap: 8px;
     background: var(--mid); border: 1px solid var(--border);
@@ -654,8 +654,8 @@
   .modal-add-btn:hover { background: var(--acid-dim); }
   .modal-add-btn:disabled { opacity: 0.5; }
 
-  .modal-desc { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px; border-top: 1px solid var(--border); padding-top: 20px; }
-  .size-chart-toggle { background: none; border: 1px solid var(--border); color: var(--text-muted); padding: 8px 16px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-bottom: 12px; transition: all 0.2s; width: 100%; text-align: left; display: flex; justify-content: space-between; align-items: center; }
+  .modal-desc { font-size: 13px; color: var(--text-muted); line-height: 1.7; margin-bottom: 28px; border-top: 1px solid var(--border); padding-top: 28px; }
+  .size-chart-toggle { background: none; border: 1px solid var(--border); color: var(--text-muted); padding: 12px 16px; font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; cursor: pointer; margin-bottom: 16px; transition: all 0.2s; width: 100%; text-align: left; display: flex; justify-content: space-between; align-items: center; }
   .size-chart-toggle:hover { border-color: var(--acid); color: var(--acid); }
   .size-chart-wrap { display: none; margin-bottom: 24px; overflow-x: auto; }
   .size-chart-wrap.open { display: block; }
@@ -1148,7 +1148,7 @@ const COLOR_MAP = {
   'athletic heather': '#b0b0b0', 'red': '#cc0000', 'navy': '#1a2060',
   'forest green': '#2d5a1b', 'maroon': '#800020', 'sport grey': '#c0bdb8',
   'light blue': '#6fb3d2', 'gold': '#d4a800', 'purple': '#6a1b9a',
-  'heather grey': '#a8a8a8', 'dark grey': '#444444', 'royal blue': '#1a4b8a',
+  'heather grey': '#a8a8a8', 'dark grey': '#444444', 'royal blue': '#1a4b8a', 'true royal': '#1a4b8a', 'sand': '#c8b89a', 'olive': '#6b7c3c', 'cream': '#f5f0e0', 'natural': '#f5f0e0', 'light pink': '#f4b8c1', 'storm': '#6b7a8d',
 };
 function getColorHex(name) {
   return COLOR_MAP[name.toLowerCase()] || '#888888';
@@ -1233,22 +1233,25 @@ function openSizeModal(productId) {
   const colorLabel = document.getElementById('colorLabel');
   const sizeLabel = document.getElementById('sizeLabel');
 
-  if (uniqueColors.length > 1) {
-    colorLabel.style.display = '';
-    colorGrid.innerHTML = uniqueColors.map(c => {
-      const firstV = enabledVariants.find(v => v.color === c);
-      const imgUrl = (firstV && (firstV.preview || firstV.product_image)) || '';
-      const hex = getColorHex(c);
-      return '<button class="color-btn" onclick="selectColor(this, \'' + c.replace(/'/g, '&#39;') + '\', \'' + imgUrl + '\')">'
-        + '<span class="color-swatch" style="background:' + hex + '"></span>' + c + '</button>';
-    }).join('');
+  colorLabel.style.display = '';
+  colorGrid.innerHTML = uniqueColors.map(c => {
+    const firstV = enabledVariants.find(v => v.color === c);
+    const imgUrl = (firstV && (firstV.preview || firstV.product_image)) || '';
+    const hex = getColorHex(c);
+    return '<button class="color-btn" onclick="selectColor(this, \'' + c.replace(/'/g, '&#39;') + '\', \'' + imgUrl + '\')">'
+      + '<span class="color-swatch" style="background:' + hex + '"></span>' + c + '</button>';
+  }).join('');
+
+  if (uniqueColors.length === 1) {
+    // auto-select single color
+    const onlyBtn = colorGrid.querySelector('.color-btn');
+    const onlyColor = uniqueColors[0];
+    const firstV = enabledVariants[0];
+    const imgUrl = (firstV && (firstV.preview || firstV.product_image)) || '';
+    selectColor(onlyBtn, onlyColor, imgUrl);
+  } else {
     sizeLabel.style.display = 'none';
     document.getElementById('sizeGrid').innerHTML = '';
-  } else {
-    colorLabel.style.display = 'none';
-    colorGrid.innerHTML = '';
-    sizeLabel.style.display = '';
-    buildSizeGrid(enabledVariants);
   }
 
   const addBtn = document.getElementById('modalAddBtn');
