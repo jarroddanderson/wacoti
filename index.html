@@ -630,6 +630,15 @@
     border-color: var(--acid); 
   }
   .size-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .color-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .color-btn {
+    background: var(--mid); border: 1px solid var(--border);
+    color: var(--white); padding: 10px 16px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; letter-spacing: 1px;
+    cursor: none; transition: all 0.2s;
+  }
+  .color-btn:hover, .color-btn.selected { background: var(--acid); color: var(--black); border-color: var(--acid); }
   .modal-add-btn {
     width: 100%;
     background: var(--acid); color: var(--black);
@@ -875,7 +884,9 @@
     </div>
     <div class="modal-body">
       <div class="modal-img" id="modalProductImg"></div>
-      <p class="modal-section-label">Select Size</p>
+      <p class="modal-section-label" id="colorLabel" style="display:none">Select Color</p>
+      <div class="color-grid" id="colorGrid"></div>
+      <p class="modal-section-label" id="sizeLabel">Select Size</p>
       <div class="size-grid" id="sizeGrid"></div>
       <button class="modal-add-btn" id="modalAddBtn" onclick="addToCartFromModal()" disabled>
         Select a size
@@ -971,6 +982,7 @@ let allProducts = [];
 let cart = JSON.parse(localStorage.getItem('wacoti_cart') || '[]');
 let currentProduct = null;
 let selectedVariant = null;
+let selectedColor = null;
 let activeFilter = 'all';
 let activeSort = 'featured';
 
@@ -1116,10 +1128,38 @@ function filterProducts(cat, btn) {
 // ============================================================
 // SIZE MODAL
 // ============================================================
+function buildSizeGrid(variants) {
+  const seen = new Set();
+  const unique = variants.filter(v => {
+    const label = v.size || v.title;
+    if (seen.has(label)) return false;
+    seen.add(label);
+    return true;
+  });
+  document.getElementById('sizeGrid').innerHTML = unique.map(v => {
+    const label = v.size || v.title;
+    return `<button class="size-btn" onclick="selectSize(this, ${v.id})" data-variant="${v.id}">${label}</button>`;
+  }).join('');
+}
+
+function selectColor(btn, color) {
+  document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedColor = color;
+  selectedVariant = null;
+  document.getElementById('sizeLabel').style.display = '';
+  const colorVariants = (currentProduct.variants || []).filter(v => v.is_enabled !== false && v.color === color);
+  buildSizeGrid(colorVariants);
+  const addBtn = document.getElementById('modalAddBtn');
+  addBtn.disabled = true;
+  addBtn.textContent = 'Select a size';
+}
+
 function openSizeModal(productId) {
   currentProduct = allProducts.find(p => p.id == productId);
   if (!currentProduct) return;
   selectedVariant = null;
+  selectedColor = null;
 
   document.getElementById('modalProductName').textContent = currentProduct.title;
   document.getElementById('modalProductPrice').textContent = getProductPrice(currentProduct);
@@ -1129,25 +1169,34 @@ function openSizeModal(productId) {
   imgEl.innerHTML = img ? `<img src="${img}" alt="${currentProduct.title}">` : '🖤';
 
   const enabledVariants = (currentProduct.variants || []).filter(v => v.is_enabled !== false);
-  const sizeGrid = document.getElementById('sizeGrid');
 
-  // Deduplicate by size
-  const seen = new Set();
-  const uniqueVariants = enabledVariants.filter(v => {
-    const label = v.size || v.title;
-    if (seen.has(label)) return false;
-    seen.add(label);
-    return true;
-  });
+  // Build unique colors
+  const colorSeen = new Set();
+  const uniqueColors = enabledVariants
+    .filter(v => v.color && !colorSeen.has(v.color) && colorSeen.add(v.color))
+    .map(v => v.color);
 
-  sizeGrid.innerHTML = uniqueVariants.map(v => {
-    const label = v.size || v.title;
-    return `<button class="size-btn" onclick="selectSize(this, ${v.id})" data-variant="${v.id}">${label}</button>`;
-  }).join('');
+  const colorGrid = document.getElementById('colorGrid');
+  const colorLabel = document.getElementById('colorLabel');
+  const sizeLabel = document.getElementById('sizeLabel');
+
+  if (uniqueColors.length > 1) {
+    colorLabel.style.display = '';
+    colorGrid.innerHTML = uniqueColors.map(c =>
+      `<button class="color-btn" onclick="selectColor(this, '${c.replace(/'/g, '&#39;')}')">${c}</button>`
+    ).join('');
+    sizeLabel.style.display = 'none';
+    document.getElementById('sizeGrid').innerHTML = '';
+  } else {
+    colorLabel.style.display = 'none';
+    colorGrid.innerHTML = '';
+    sizeLabel.style.display = '';
+    buildSizeGrid(enabledVariants);
+  }
 
   const addBtn = document.getElementById('modalAddBtn');
   addBtn.disabled = true;
-  addBtn.textContent = 'Select a size';
+  addBtn.textContent = uniqueColors.length > 1 ? 'Select a color' : 'Select a size';
 
   document.getElementById('sizeModal').classList.add('open');
 }
