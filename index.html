@@ -1000,7 +1000,7 @@ function categorizeProduct(product) {
 
 function getProductPrice(product) {
   if (!product.variants || !product.variants.length) return 'TBD';
-  const prices = product.variants.filter(v => v.is_enabled).map(v => v.price);
+  const prices = product.variants.filter(v => v.is_enabled !== false).map(v => v.price);
   if (!prices.length) return 'TBD';
   const min = Math.min(...prices);
   const max = Math.max(...prices);
@@ -1086,7 +1086,7 @@ function openSizeModal(productId) {
   const img = getProductImage(currentProduct);
   imgEl.innerHTML = img ? `<img src="${img}" alt="${currentProduct.title}">` : '🖤';
 
-  const enabledVariants = (currentProduct.variants || []).filter(v => v.is_enabled);
+  const enabledVariants = (currentProduct.variants || []).filter(v => v.is_enabled !== false);
   const sizeGrid = document.getElementById('sizeGrid');
 
   // Deduplicate by size
