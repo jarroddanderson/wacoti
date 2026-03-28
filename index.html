@@ -578,7 +578,7 @@
   .modal {
     background: var(--gray);
     border: 1px solid var(--border);
-    width: 720px; max-width: 96vw;
+    width: 480px; max-width: 95vw;
     max-height: 90vh;
     overflow-y: auto;
     transform: translateY(20px);
@@ -601,16 +601,16 @@
     cursor: none; transition: color 0.2s;
   }
   .modal-close:hover { color: var(--acid); }
-  .modal-body { padding: 28px 32px; }
+  .modal-body { padding: 40px 44px; }
   .modal-img {
     width: 100%; aspect-ratio: 1/1;
     background: var(--mid);
-    margin-bottom: 0;
+    margin-bottom: 32px;
     display: flex; align-items: center; justify-content: center;
     font-size: 64px; color: var(--text-muted);
     overflow: hidden;
   }
-  .modal-img img { width: 100%; height: 100%; object-fit: contain; }
+  .modal-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .modal-section-label {
     font-size: 10px; letter-spacing: 3px;
     text-transform: uppercase; color: var(--text-muted);
@@ -662,18 +662,6 @@
   .size-chart { width: 100%; border-collapse: collapse; font-family: 'DM Mono', monospace; font-size: 11px; }
   .size-chart th, .size-chart td { border: 1px solid var(--border); padding: 8px 12px; text-align: center; color: var(--text-muted); }
   .size-chart th { color: var(--acid); letter-spacing: 1px; text-transform: uppercase; }
-  .modal-grid { display: flex; gap: 28px; margin-bottom: 24px; }
-  .modal-grid .modal-img { width: 220px; min-width: 220px; flex-shrink: 0; }
-  .modal-controls { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-  .modal-controls .color-grid { margin-bottom: 20px; }
-  .modal-controls .size-grid { margin-bottom: 20px; }
-  .modal-qty { margin-bottom: 16px; }
-  .modal-qty .modal-section-label { margin-bottom: 10px; }
-  .qty-stepper { display: flex; align-items: center; gap: 16px; }
-  .qty-step-btn { background: var(--mid); border: 1px solid var(--border); color: var(--white); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; line-height: 1; transition: all 0.2s; font-family: monospace; }
-  .qty-step-btn:hover { border-color: var(--acid); color: var(--acid); }
-  .qty-num-display { font-family: 'DM Mono', monospace; font-size: 14px; min-width: 24px; text-align: center; }
-  .modal-controls .modal-add-btn { margin-top: auto; width: 100%; }
   /* CHECKOUT MODAL */
   .checkout-modal { width: 580px; }
   .checkout-form { display: flex; flex-direction: column; gap: 16px; }
@@ -906,27 +894,17 @@
       <button class="modal-close" onclick="closeSizeModal()">✕</button>
     </div>
     <div class="modal-body">
-      <div class="modal-grid">
-        <div class="modal-img" id="modalProductImg"></div>
-        <div class="modal-controls">
-          <p class="modal-section-label" id="colorLabel" style="display:none">Select Color</p>
-          <div class="color-grid" id="colorGrid"></div>
-          <p class="modal-section-label" id="sizeLabel">Select Size</p>
-          <div class="size-grid" id="sizeGrid"></div>
-          <div class="modal-qty">
-            <p class="modal-section-label">Qty</p>
-            <div class="qty-stepper">
-              <button class="qty-step-btn" onclick="changeQty(-1)">−</button>
-              <span class="qty-num-display" id="modalQtyNum">1</span>
-              <button class="qty-step-btn" onclick="changeQty(1)">+</button>
-            </div>
-          </div>
-          <button class="modal-add-btn" id="modalAddBtn" onclick="addToCartFromModal()" disabled>Select a size</button>
-        </div>
-      </div>
+      <div class="modal-img" id="modalProductImg"></div>
+      <p class="modal-section-label" id="colorLabel" style="display:none">Select Color</p>
+      <div class="color-grid" id="colorGrid"></div>
+      <p class="modal-section-label" id="sizeLabel">Select Size</p>
+      <div class="size-grid" id="sizeGrid"></div>
       <div class="modal-desc" id="modalDesc"></div>
       <button class="size-chart-toggle" onclick="toggleSizeChart(this)">Size Guide <span>▾</span></button>
       <div class="size-chart-wrap" id="sizeChartWrap"></div>
+      <button class="modal-add-btn" id="modalAddBtn" onclick="addToCartFromModal()" disabled>
+        Select a size
+      </button>
     </div>
   </div>
 </div>
@@ -1019,7 +997,6 @@ let cart = JSON.parse(localStorage.getItem('wacoti_cart') || '[]');
 let currentProduct = null;
 let selectedVariant = null;
 let selectedColor = null;
-let modalQty = 1;
 let activeFilter = 'all';
 let activeSort = 'featured';
 
@@ -1165,11 +1142,6 @@ function filterProducts(cat, btn) {
 // ============================================================
 // SIZE MODAL
 // ============================================================
-function changeQty(delta) {
-  modalQty = Math.max(1, modalQty + delta);
-  document.getElementById('modalQtyNum').textContent = modalQty;
-}
-
 const COLOR_MAP = {
   'black': '#111111', 'white': '#f0f0f0', 'carbon grey': '#636363',
   'dusty rose': '#c9a0a0', 'team red': '#bf0a0a', 'team royal': '#1a4b8a',
@@ -1182,11 +1154,11 @@ function getColorHex(name) {
   return COLOR_MAP[name.toLowerCase()] || '#888888';
 }
 
-const DESCRIPTIONS = {
-  hoodies: 'Unisex heavy blend pullover hoodie. 50% cotton, 50% polyester. Double-lined hood, front pouch pocket, and matching drawcord. Runs true to size — size up for a looser fit.',
-  tees: 'Unisex staple tee. 100% ring-spun cotton (heather colors 90% cotton, 10% polyester). Soft, lightweight, and pre-shrunk. Tear-away label for added comfort.',
-  sweaters: 'Unisex garment-dyed sweatshirt. 80% cotton, 20% polyester. Relaxed fit with ribbed cuffs and waistband. Side-seamed for a cleaner silhouette.',
-  stickers: 'High-quality vinyl sticker. Waterproof and UV-resistant — built to last indoors and out. Clean peel-and-stick backing.',
+const FALLBACK_DESCRIPTIONS = {
+  hoodies: 'Unisex heavy blend pullover hoodie. 50% cotton, 50% polyester. Runs true to size.',
+  tees: 'Unisex staple tee. 100% ring-spun cotton. Soft, lightweight, and pre-shrunk.',
+  sweaters: 'Unisex garment-dyed sweatshirt. 80% cotton, 20% polyester. Relaxed fit.',
+  stickers: 'High-quality vinyl sticker. Waterproof and UV-resistant.',
 };
 const SIZE_CHARTS = {
   apparel: [
@@ -1286,10 +1258,11 @@ function openSizeModal(productId) {
   addBtn.disabled = true;
   addBtn.textContent = uniqueColors.length > 1 ? 'Select a color' : 'Select a size';
 
-  // Description
+  // Description — use real product description from API, fall back to category default
   const cat = categorizeProduct(currentProduct);
   const descEl = document.getElementById('modalDesc');
-  descEl.textContent = DESCRIPTIONS[cat] || DESCRIPTIONS.hoodies;
+  const rawDesc = (currentProduct.description || '').replace(/<[^>]*>/g, '').trim();
+  descEl.textContent = rawDesc || FALLBACK_DESCRIPTIONS[cat] || FALLBACK_DESCRIPTIONS.hoodies;
 
   // Size chart
   const chartData = (cat === 'stickers') ? SIZE_CHARTS.stickers : SIZE_CHARTS.apparel;
@@ -1301,7 +1274,6 @@ function openSizeModal(productId) {
     + rows.map(r => '<tr>' + r.map(c => '<td>' + c + '</td>').join('') + '</tr>').join('')
     + '</tbody></table>';
 
-  modalQty = 1; document.getElementById('modalQtyNum').textContent = '1';
   document.getElementById('sizeModal').classList.add('open');
 }
 
@@ -1324,7 +1296,7 @@ function closeSizeModal(e) {
 
 function addToCartFromModal() {
   if (!currentProduct || !selectedVariant) return;
-  addToCart(currentProduct, selectedVariant, modalQty);
+  addToCart(currentProduct, selectedVariant);
   document.getElementById('sizeModal').classList.remove('open');
   showToast(`${currentProduct.title} added to bag`);
   toggleCart();
@@ -1333,10 +1305,10 @@ function addToCartFromModal() {
 // ============================================================
 // CART
 // ============================================================
-function addToCart(product, variant, qty = 1) {
+function addToCart(product, variant) {
   const existing = cart.find(i => i.variantId === variant.id && i.productId === product.id);
   if (existing) {
-    existing.qty += qty;
+    existing.qty += 1;
   } else {
     cart.push({
       productId: product.id,
@@ -1345,7 +1317,7 @@ function addToCart(product, variant, qty = 1) {
       variantTitle: variant.title.split(' / ')[0],
       price: variant.price,
       image: getProductImage(product),
-      qty: qty
+      qty: 1
     });
   }
   saveCart();
