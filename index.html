@@ -606,11 +606,11 @@
     width: 100%; aspect-ratio: 1/1;
     background: var(--mid);
     margin-bottom: 32px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 64px; color: var(--text-muted);
+    position: relative;
     overflow: hidden;
+    font-size: 64px; color: var(--text-muted);
   }
-  .modal-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .modal-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
   .modal-section-label {
     font-size: 10px; letter-spacing: 3px;
     text-transform: uppercase; color: var(--text-muted);
@@ -665,7 +665,7 @@
   .size-chart th, .size-chart td { border: 1px solid var(--border); padding: 8px 12px; text-align: center; color: var(--text-muted); }
   .size-chart th { color: var(--acid); letter-spacing: 1px; text-transform: uppercase; }
   .modal-grid { display: flex; gap: 28px; margin-bottom: 24px; }
-  .modal-grid .modal-img { width: 220px; min-width: 220px; flex-shrink: 0; margin-bottom: 0; }
+  .modal-grid .modal-img { width: 220px; height: 220px; min-width: 220px; flex-shrink: 0; margin-bottom: 0; }
   .modal-controls { flex: 1; display: flex; flex-direction: column; min-width: 0; }
   .modal-controls .color-grid { margin-bottom: 14px; gap: 8px; flex-wrap: wrap; }
   .modal-controls .size-grid { margin-bottom: 12px; }
@@ -1184,6 +1184,18 @@ function getColorHex(name) {
   return COLOR_MAP[name.toLowerCase()] || '#888888';
 }
 
+const PRODUCT_DESCRIPTIONS = {
+  425761290: "Premium vinyl sticker. Weatherproof and UV-resistant. Stick it anywhere you want the message to land.",
+  425625877: "Unisex garment-dyed crewneck sweatshirt. 80% cotton, 20% polyester. Relaxed drop-shoulder fit — wear it oversized or true to size.",
+  425624426: "Unisex staple tee. 100% ring-spun cotton. Pre-shrunk, lightweight, and built to last. The statement piece every creative needs.",
+  425488797: "Unisex heavy blend pullover hoodie. 50% cotton, 50% polyester. Kangaroo pocket, adjustable drawstring. For every creative who's done negotiating their rates.",
+  425488730: "Unisex heavy blend pullover hoodie. 50% cotton, 50% polyester. Net 30 is already generous — wear it like a reminder.",
+  425488688: "Unisex heavy blend pullover hoodie. 50% cotton, 50% polyester. Exposure doesn't pay rent. Say it with your whole chest.",
+  425488611: "Unisex heavy blend pullover hoodie. 50% cotton, 50% polyester. Kangaroo pocket, adjustable drawstring. Your values on your sleeve — literally.",
+  425472034: "Unisex heavy blend pullover hoodie. 50% cotton, 50% polyester. The original WACOTI statement piece. Classic fit, no compromise.",
+  425471169: "Unisex staple tee. 100% ring-spun cotton. Soft, pre-shrunk, and lightweight. The message your clients need to see.",
+  425468688: "Unisex heavy blend pullover hoodie. 50% cotton, 50% polyester. The original. Bold enough to say what every creative is thinking.",
+};
 const FALLBACK_DESCRIPTIONS = {
   hoodies: 'Unisex heavy blend pullover hoodie. 50% cotton, 50% polyester. Runs true to size.',
   tees: 'Unisex staple tee. 100% ring-spun cotton. Soft, lightweight, and pre-shrunk.',
@@ -1291,7 +1303,7 @@ function openSizeModal(productId) {
   const cat = categorizeProduct(currentProduct);
   const descEl = document.getElementById('modalDesc');
   const rawDesc = (currentProduct.description || '').replace(/<[^>]*>/g, '').trim();
-  descEl.textContent = rawDesc || FALLBACK_DESCRIPTIONS[cat] || FALLBACK_DESCRIPTIONS.hoodies;
+  descEl.textContent = rawDesc || PRODUCT_DESCRIPTIONS[currentProduct.id] || FALLBACK_DESCRIPTIONS[cat] || FALLBACK_DESCRIPTIONS.hoodies;
 
   // Size chart
   const chartData = (cat === 'stickers') ? SIZE_CHARTS.stickers : SIZE_CHARTS.apparel;
