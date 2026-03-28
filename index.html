@@ -972,7 +972,11 @@ async function fetchProducts() {
   try {
     const res = await fetch('/api/products');
     const data = await res.json();
-    allProducts = data.products || [];
+    allProducts = (data.products || []).sort((a, b) => {
+      const aS = categorizeProduct(a) === 'sweaters';
+      const bS = categorizeProduct(b) === 'sweaters';
+      return aS === bS ? 0 : aS ? -1 : 1;
+    });
 
     if (!allProducts.length) {
       renderProducts([]);
