@@ -632,13 +632,16 @@
   .size-btn:disabled { opacity: 0.3; cursor: not-allowed; }
   .color-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
   .color-btn {
+    display: flex; align-items: center; gap: 8px;
     background: var(--mid); border: 1px solid var(--border);
-    color: var(--white); padding: 10px 16px;
+    color: var(--white); padding: 8px 14px;
     font-family: 'DM Mono', monospace;
     font-size: 11px; letter-spacing: 1px;
     cursor: none; transition: all 0.2s;
   }
-  .color-btn:hover, .color-btn.selected { background: var(--acid); color: var(--black); border-color: var(--acid); }
+  .color-btn:hover, .color-btn.selected { border-color: var(--acid); color: var(--acid); background: transparent; }
+  .color-swatch { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.25); flex-shrink: 0; transition: outline 0.2s; }
+  .color-btn.selected .color-swatch { outline: 2px solid var(--acid); outline-offset: 2px; }
   .modal-add-btn {
     width: 100%;
     background: var(--acid); color: var(--black);
@@ -1128,6 +1131,18 @@ function filterProducts(cat, btn) {
 // ============================================================
 // SIZE MODAL
 // ============================================================
+const COLOR_MAP = {
+  'black': '#111111', 'white': '#f0f0f0', 'carbon grey': '#636363',
+  'dusty rose': '#c9a0a0', 'team red': '#bf0a0a', 'team royal': '#1a4b8a',
+  'athletic heather': '#b0b0b0', 'red': '#cc0000', 'navy': '#1a2060',
+  'forest green': '#2d5a1b', 'maroon': '#800020', 'sport grey': '#c0bdb8',
+  'light blue': '#6fb3d2', 'gold': '#d4a800', 'purple': '#6a1b9a',
+  'heather grey': '#a8a8a8', 'dark grey': '#444444', 'royal blue': '#1a4b8a',
+};
+function getColorHex(name) {
+  return COLOR_MAP[name.toLowerCase()] || '#888888';
+}
+
 function buildSizeGrid(variants) {
   const seen = new Set();
   const unique = variants.filter(v => {
@@ -1142,11 +1157,14 @@ function buildSizeGrid(variants) {
   }).join('');
 }
 
-function selectColor(btn, color) {
+function selectColor(btn, color, imgUrl) {
   document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
   selectedColor = color;
   selectedVariant = null;
+  if (imgUrl) {
+    document.getElementById('modalProductImg').innerHTML = '<img src="' + imgUrl + '" alt="' + color + '">';
+  }
   document.getElementById('sizeLabel').style.display = '';
   const colorVariants = (currentProduct.variants || []).filter(v => v.is_enabled !== false && v.color === color);
   buildSizeGrid(colorVariants);
@@ -1182,9 +1200,13 @@ function openSizeModal(productId) {
 
   if (uniqueColors.length > 1) {
     colorLabel.style.display = '';
-    colorGrid.innerHTML = uniqueColors.map(c =>
-      `<button class="color-btn" onclick="selectColor(this, '${c.replace(/'/g, '&#39;')}')">${c}</button>`
-    ).join('');
+    colorGrid.innerHTML = uniqueColors.map(c => {
+      const firstV = enabledVariants.find(v => v.color === c);
+      const imgUrl = (firstV && (firstV.preview || firstV.product_image)) || '';
+      const hex = getColorHex(c);
+      return '<button class="color-btn" onclick="selectColor(this, \'' + c.replace(/'/g, '&#39;') + '\', \'' + imgUrl + '\')">'
+        + '<span class="color-swatch" style="background:' + hex + '"></span>' + c + '</button>';
+    }).join('');
     sizeLabel.style.display = 'none';
     document.getElementById('sizeGrid').innerHTML = '';
   } else {
