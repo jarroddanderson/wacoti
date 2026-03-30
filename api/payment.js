@@ -20,10 +20,8 @@ export default async function handler(req, res) {
       amount: Math.round(amount),
       currency,
       metadata,
-      payment_method_types: ['card'],
-      payment_method_options: {
-        card: { request_three_d_secure: 'automatic' }
-      }
+      automatic_payment_methods: { enabled: true },
+      payment_method_configuration: 'pmc_1TGklXKn5YYNU6yD3Zj0za1F',
     });
 
     res.status(200).json({ clientSecret: paymentIntent.client_secret });
